@@ -23,8 +23,8 @@ This is the Arch-world equivalent of MX Linux's *MX Snapshot*. It works on plain
 3. It packs `clone.sfs` into a normal Arch live ISO using `mkarchiso`.
 
 The finished ISO boots a plain, reliable Arch live environment. Your cloned
-system rides along inside it as data. To put your system back, you boot the ISO
-and run one restore command.
+system rides along inside it as data. To put your system back, you simply boot
+the ISO: the restore tool starts on its own after a short, cancelable countdown.
 
 ---
 
@@ -56,23 +56,37 @@ sudo ./build-recovery-iso.sh
 The script will:
 
 1. **Check the four packages** and offer to install any missing ones.
-2. **Detect your boot setup** (UEFI or BIOS; systemd-boot or GRUB) so the
-   restore can rebuild it correctly later.
-3. **Show the exclusion list** — everything that will be *left out* of the clone
-   (caches, and secrets such as SSH keys and saved passwords). It offers to open
-   this list in an editor so you can change it. **Read this carefully:** anything
-   not on the list gets copied into the ISO.
-4. **Ask three questions** — where to do the build work, where to save the
+2. **Detect your boot setup** — UEFI or BIOS, systemd-boot or GRUB, where the
+   EFI partition lives, whether your root is encrypted, and whether `/home` or
+   `/boot` is on its own partition — so the restore can rebuild it correctly.
+3. **Ask about secrets.** It first asks if the ISO is for your **personal use
+   only**. If you say yes, it offers to **include your secrets** (SSH/GPG keys,
+   saved logins, password stores, shell history) so the restored system is ready
+   to use with nothing to set up again — no hand-editing required. If you say no,
+   your secrets are left out, and you can still open the exclusion list in an
+   editor to fine-tune it.
+4. **Show the exclusion list** — everything that will be *left out* of the clone.
+   **Read this carefully:** anything not on the list gets copied into the ISO.
+5. **Ask three questions** — where to do the build work, where to save the
    finished `.iso`, and what to name it. Press **Enter** to accept each default.
-5. **Clone, compress, and build.** This is slow (it compresses many gigabytes).
-   When it finishes it prints the path to your `.iso` and a matching `.sha256`
-   checksum file.
+6. **Clone, compress, and build.** When it finishes it prints the path to your
+   `.iso`, a matching `.sha256` checksum file, a build log saved beside the ISO,
+   and the total build time.
 
 > **About secrets (important if you share the ISO).** By default the script
 > leaves out SSH private keys, GPG keys, password stores, browser logins, cloud
-> tokens, and shell history. If you remove any of those lines from the exclusion
-> list, that secret gets baked into the ISO. Only do that for a recovery image
-> you will keep **private**.
+> tokens, and shell history. The "personal use" question above is the easy way to
+> include them; removing lines from the exclusion list by hand does the same
+> thing. Either way, only include secrets in a recovery image you will keep
+> **private** — anyone who gets the ISO could read them.
+
+> **Faster builds (optional).** Compressing the clone is the slow step. By
+> default it uses a fast setting (zstd level 3). For an even quicker build at the
+> cost of a larger ISO, set the level (1 is fastest) when you start the script:
+>
+> ```
+> sudo CLONE_ZSTD_LEVEL=1 ./build-recovery-iso.sh
+> ```
 
 ---
 
@@ -100,9 +114,10 @@ sudo dd if=your-recovery.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ## Step 3 — Restore onto a new disk
 
 Boot the target machine from the USB stick (use the firmware boot menu). You
-arrive at a plain Arch live prompt, logged in as `root`.
-
-Start the restore tool:
+arrive at a plain Arch live environment, logged in as `root`, and the restore
+tool **starts automatically** after a 10-second countdown. (Press any key during
+the countdown to cancel and get a normal shell instead; you can start the tool
+by hand at any time by running the command below.)
 
 ```
 /root/restore-system.sh
@@ -112,23 +127,42 @@ It walks you through everything:
 
 1. **Verifies** the clone is undamaged (checks its `.sha256`) **before touching
    any disk**.
-2. **Lists the disks** and asks which one to restore onto.
-3. **Asks you to type `ERASE`** to confirm — the chosen disk is wiped completely.
-4. Partitions and formats the disk, unpacks your clone onto it, writes a fresh
-   `/etc/fstab`, rebuilds the boot images, and reinstalls the matching
-   bootloader.
+2. **Shows a numbered list of disks** and asks you to pick one by number — no
+   typing device paths. The USB stick you booted from is left off the list so you
+   cannot wipe it by mistake.
+3. **Checks the disk is big enough** for your clone *before* erasing anything, so
+   a too-small disk is refused instead of being wiped and then failing.
+4. **Asks about encryption.** If your source system used LUKS encryption it
+   offers to encrypt the new disk the same way; if it did not, it offers to add
+   encryption anyway. Choose, and (if yes) enter a passphrase.
+5. **Shows the plan and asks you to type `ERASE`** to confirm — the chosen disk
+   is then wiped completely.
+6. Partitions and formats the disk (recreating a separate `/home` or `/boot` if
+   your original had one), unpacks your clone onto it, writes a fresh
+   `/etc/fstab`, rebuilds the boot images, and reinstalls the matching bootloader.
+7. **Offers to reboot or power off** when it finishes, reminding you to remove the
+   USB stick first.
 
-When it says it is finished, remove the USB stick and reboot. Your system comes
-back up as it was.
+Your system comes back up as it was.
+
+> **Heads-up on encryption and unusual layouts.** The plain case — one
+> unencrypted root partition (plus an EFI partition on UEFI) — is fully tested and
+> proven end-to-end. The newer LUKS-encryption and separate `/home` / `/boot`
+> paths are complete but **not yet hardware-tested**; check the result before you
+> rely on them.
 
 ---
 
-## What this version does **not** do yet
+## Limitations
 
-- **Encrypted (LUKS) disks.** If your source system is encrypted, restore puts
-  it back **unencrypted**. Encryption-on-restore is planned for a later version.
-- It assumes a single root partition plus (on UEFI) an EFI partition. Exotic
-  layouts may need adjusting.
+- **LUKS encryption and separate `/home` / `/boot`** are supported but **not yet
+  hardware-tested** (see the heads-up under Step 3). The plain single-root case is
+  proven.
+- **GRUB on an encrypted disk** is handled on a best-effort basis — if you use
+  GRUB *and* encryption, check `/etc/default/grub` on the restored system.
+- The restore assumes the **target machine's firmware matches the source's**
+  (both UEFI, or both BIOS). Restoring a UEFI clone onto a BIOS-only machine, or
+  vice versa, is not handled.
 
 ---
 

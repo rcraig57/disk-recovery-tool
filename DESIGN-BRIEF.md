@@ -72,8 +72,10 @@ is the less-idiomatic but far more robust path for a heterogeneous audience.
 - **Disk space.** The build work directory can need ~2–3× the final ISO size.
   Preflight-check free space and let the user choose the work location.
 - **Privileges.** `mkarchiso` and the restore script both require root.
-- **(Optional) LUKS.** If the source has a `/etc/crypttab`, decide whether the
-  restore offers encryption. Park this for v2 unless the user wants it now.
+- **(Optional) LUKS.** ✅ Implemented in v2. The build detects whether the source
+  root is on LUKS and which initramfs style it uses; the restore defaults to the
+  source's state, lets the user toggle it, and sets up the LUKS container,
+  `crypttab`, hooks, and kernel cmdline to match. Not yet hardware-tested.
 
 ## Dependency preflight the script must perform
 
@@ -131,19 +133,28 @@ test bed (details in `~/.claude/projects/-/memory/kiro-vm-access.md`):
   real `mkarchiso` run inside the Kiro VM. The Mint session could only
   statically check it — it cannot run `mkarchiso` (Debian, no pacman).
 
-## Open questions for the next session
+## Resolved decisions (were open questions)
 
-1. SquashFS compression: `zstd` at what level (size vs build time)?
-2. Emit a checksum + a verify step (like MX Snapshot's `.md5`)?
-3. Output ISO naming/versioning (datetime stamp, basename).
-4. Single monolithic script vs a small set of files (build script + exclude list
-   + restore script template). Leaning: one build script that *writes out* the
-   restore script into the ISO, plus an editable exclude list.
-5. Offer LUKS on restore if the source is encrypted? (v1 or v2?)
+1. **SquashFS compression:** `zstd`, level tunable via the `CLONE_ZSTD_LEVEL`
+   environment variable; default **3** for fast builds (was 19). 1 = fastest /
+   largest, 22 = max / slowest.
+2. **Checksum + verify:** yes — emit a `.sha256` for both `clone.sfs` and the
+   final ISO, and the restore verifies `clone.sfs` before touching any disk.
+3. **ISO naming:** `<hostname>-recovery-YYYYMMDD`, sanitized to safe filename
+   characters.
+4. **One script vs many:** one build script that *writes out* the restore script
+   and (on first run) the editable exclude list. Chosen and shipped.
+5. **LUKS on restore:** added in **v2** (see the LUKS landmine above).
 
-## Immediate next steps when you pick this up on Arch
+## Status
 
-1. Confirm the user is ready, and confirm/adjust the open questions above.
-2. `ssh kiro`, snapshot the VM, install `archiso` + deps in the guest.
-3. Draft the build script per the standards; `shellcheck` it.
-4. Do a first end-to-end create → restore cycle in the VM against a scratch disk.
+- **v1 (single unencrypted root + EFI): proven end-to-end** — build → restore to
+  a blank disk → boots to the login screen, verified in the Kiro VM.
+- **v2 additions: code-complete, not yet hardware-tested** — LUKS-on-restore,
+  separate `/home` / `/boot`, ESP-mountpoint detection, faster default
+  compression, personal-use "include my secrets" opt-in, auto-launch of the
+  restore tool on boot, and restore/builder quality-of-life (numbered disk menu,
+  pre-wipe size check, reboot prompt, build log, summary).
+- **Still open:** hardware/VM test of the v2 paths; source-vs-target firmware
+  mismatch (UEFI clone onto a BIOS-only machine, or vice versa).
+- Published: https://github.com/rcraig57/arch-recovery-iso (MIT).
