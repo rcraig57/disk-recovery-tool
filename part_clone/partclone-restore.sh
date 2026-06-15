@@ -257,7 +257,7 @@ if (( SLACK > 1024*1024*1024 )); then          # >1 GiB of slack worth using
   LAST_N=""; LAST_FS=""
   while IFS=$'\t' read -r partn _ fstype engine image uuid _ _; do
     [[ "$partn" == "partn" ]] && continue
-    case "$fstype" in btrfs|ext2|ext3|ext4) LAST_N="$partn"; LAST_FS="$fstype" ;; esac
+    case "$fstype" in btrfs|ext2|ext3|ext4|xfs) LAST_N="$partn"; LAST_FS="$fstype" ;; esac
   done < "$MANIFEST"
 
   if [[ -n "$LAST_N" ]]; then
@@ -286,11 +286,21 @@ if (( SLACK > 1024*1024*1024 )); then          # >1 GiB of slack worth using
         gdev="$(part_dev "$TARGET" "$LAST_N")"
         case "$LAST_FS" in
           btrfs)
+            # btrfs grows online; a bare mount lands on the top-level (or default)
+            # subvol, which is fine — resize operates on the whole filesystem.
             mp="$(mktemp -d)"; mount "$gdev" "$mp"
             btrfs filesystem resize max "$mp"; umount "$mp"; rmdir "$mp" ;;
           ext2|ext3|ext4)
             e2fsck -f -y "$gdev" >/dev/null || true
             resize2fs "$gdev" ;;
+          xfs)
+            # xfs only grows while mounted, and only grows (never shrinks).
+            if command -v xfs_growfs >/dev/null 2>&1; then
+              mp="$(mktemp -d)"; mount "$gdev" "$mp"
+              xfs_growfs "$mp"; umount "$mp"; rmdir "$mp"
+            else
+              warn "xfs_growfs not found — leaving xfs partition $LAST_N unextended."
+            fi ;;
         esac
         ok "Filesystem on $gdev grown to fill the disk."
       else
@@ -304,7 +314,9 @@ fi
 # 8. OPTIONAL: re-register the bootloader. Not needed to boot the SAME machine
 #    (the restored ESP already carries \EFI\BOOT\BOOTX64.EFI and UUIDs match),
 #    but on a NEW machine the firmware has no NVRAM entry. Best-effort, prompted,
-#    and clearly the newest/least-proven path. Limine/GRUB/systemd-boot.
+#    and clearly the newest/least-proven path. It honors the restored fstab to
+#    mount /boot and /boot/efi, discovers the btrfs root subvol from fstab, and
+#    detects Limine / GRUB2 (Fedora) / GRUB (Debian-Arch) / systemd-boot.
 # --------------------------------------------------------------------------- #
 echo
 do_boot=0
@@ -317,51 +329,116 @@ if (( do_boot )); then
   warn "Bootloader re-registration is the least-tested step — see notes if it fails."
   [[ "$BOOTLOADER_DRYRUN" == "1" ]] && \
     msg "BOOTLOADER_DRYRUN=1 — will mount + detect, then PRINT the chroot command, not run it."
-  # Find the root partition: first manifest entry whose fstype is a root-y fs.
-  ROOT_N=""; ROOT_FS=""
+  # Map each filesystem UUID to its restored target partition number, so we can
+  # honor the restored fstab regardless of how many partitions or which distro.
+  declare -A UUID2N=()
   while IFS=$'\t' read -r partn _ fstype engine image uuid _ _; do
     [[ "$partn" == "partn" ]] && continue
-    case "$fstype" in btrfs|ext4|xfs|f2fs) ROOT_N="$partn"; ROOT_FS="$fstype"; break ;; esac
+    [[ "$uuid" != "-" ]] && UUID2N["$uuid"]="$partn"
   done < "$MANIFEST"
+
+  # Identify the ROOT partition the distro-agnostic way: it is whichever restored
+  # filesystem actually contains /etc/fstab. (Picking "first ext4/btrfs in the
+  # manifest" mis-fires on layouts with a separate ext4 /boot, e.g. Fedora.)
+  # For btrfs, the root may be a named subvol (Arch=@, Fedora=root) under a
+  # top-level mount, or the default subvol — so we read the subvol out of fstab.
+  ROOT_N=""; ROOT_FS=""; ROOT_SUBVOL=""; cand_fstab=""
+  probe="$(mktemp -d)"
+  while IFS=$'\t' read -r partn _ fstype engine image uuid _ _; do
+    [[ "$partn" == "partn" ]] && continue
+    case "$fstype" in btrfs|ext2|ext3|ext4|xfs|f2fs) ;; *) continue ;; esac
+    mount -o ro "$(part_dev "$TARGET" "$partn")" "$probe" 2>/dev/null || continue
+    if [[ -f "$probe/etc/fstab" ]]; then
+      cand_fstab="$probe/etc/fstab"                      # default/named subvol IS root
+    elif [[ "$fstype" == "btrfs" ]]; then
+      # A bare btrfs mount lands on the top level, so the root subvol's fstab is
+      # at <mp>/<subvol>/etc/fstab — depth 3 from the probe mountpoint.
+      cand_fstab="$(find "$probe" -maxdepth 3 -type f -path '*/etc/fstab' 2>/dev/null | head -1)"
+    fi
+    if [[ -n "$cand_fstab" ]]; then
+      ROOT_N="$partn"; ROOT_FS="$fstype"
+      if [[ "$fstype" == "btrfs" ]]; then
+        ROOT_SUBVOL="$(awk '$1!~/^#/ && $2=="/" && $3=="btrfs"{print $4}' "$cand_fstab" \
+                       | grep -oE 'subvol=[^,]+' | head -1 | cut -d= -f2 || true)"
+      fi
+      umount "$probe" 2>/dev/null || true
+      break
+    fi
+    umount "$probe" 2>/dev/null || true
+  done < "$MANIFEST"
+  rmdir "$probe" 2>/dev/null || true
+
   if [[ -z "$ROOT_N" ]]; then
-    warn "Could not identify a root partition; skipping bootloader step."
+    warn "Could not identify a root partition (no /etc/fstab found); skipping bootloader step."
   else
     rdev="$(part_dev "$TARGET" "$ROOT_N")"
     root_mp="$(mktemp -d)"
-    if [[ "$ROOT_FS" == "btrfs" ]]; then
-      # CachyOS-style layout: root subvol is @. Fall back to bare mount if absent.
-      mount -o "subvol=@" "$rdev" "$root_mp" 2>/dev/null || mount "$rdev" "$root_mp"
+    if [[ "$ROOT_FS" == "btrfs" && -n "$ROOT_SUBVOL" ]]; then
+      msg "Root is btrfs subvol '$ROOT_SUBVOL' on $rdev"
+      mount -o "subvol=$ROOT_SUBVOL" "$rdev" "$root_mp"
     else
       mount "$rdev" "$root_mp"
     fi
-    # Mount the ESP where the restored fstab expects it (read it from fstab).
-    esp_mp="$(awk '$2=="/boot"||$2=="/boot/efi"{print $2; exit}' "$root_mp/etc/fstab" 2>/dev/null)"
-    esp_mp="${esp_mp:-/boot}"
-    # The ESP is whichever restored partition is vfat.
-    esp_n=""
-    while IFS=$'\t' read -r partn _ fstype engine image uuid _ _; do
-      [[ "$fstype" == "vfat" ]] && { esp_n="$partn"; break; }
-    done < "$MANIFEST"
-    [[ -n "$esp_n" ]] && mount "$(part_dev "$TARGET" "$esp_n")" "$root_mp$esp_mp"
+    fstab="$root_mp/etc/fstab"
+
+    # Mount every other fstab filesystem at its mountpoint, shallowest first so a
+    # parent (/boot) mounts before its child (/boot/efi). Match fstab UUID= lines
+    # to the restored partitions, and carry each entry's options so a btrfs subvol
+    # (e.g. /home subvol=home on the same device as root) mounts correctly instead
+    # of bare. Track the vfat ESP's mountpoint for grub-install's --efi-directory.
+    esp_dir=""
+    while IFS=$'\t' read -r mp fsuuid fstype opts; do
+      n="${UUID2N[$fsuuid]:-}"
+      if [[ -z "$n" ]]; then
+        warn "fstab mount $mp (UUID=$fsuuid) is not in this backup — skipping."
+        continue
+      fi
+      mount_opts=()
+      if [[ "$fstype" == "btrfs" ]]; then
+        subv="$(grep -oE 'subvol=[^,]+' <<<"$opts" | head -1 || true)"
+        [[ -n "$subv" ]] && mount_opts=(-o "$subv")
+      fi
+      mkdir -p "$root_mp$mp"
+      mount "${mount_opts[@]+"${mount_opts[@]}"}" "$(part_dev "$TARGET" "$n")" "$root_mp$mp" 2>/dev/null \
+        || warn "Could not mount $mp; bootloader step may be incomplete."
+      [[ "$fstype" == "vfat" ]] && esp_dir="$mp"
+    done < <(awk '$1 ~ /^UUID=/ && $2 ~ /^\// && $2 != "/" {
+                    sub(/^UUID=/,"",$1); depth=gsub(/\//,"/",$2);
+                    print depth "\t" $2 "\t" $1 "\t" $3 "\t" $4
+                  }' "$fstab" | sort -n | cut -f2-)
+    [[ -z "$esp_dir" ]] && esp_dir="/boot/efi"           # sensible default
     for b in proc sys dev; do mount --bind "/$b" "$root_mp/$b"; done
+
+    # Derive the EFI bootloader-id from the restored os-release (fedora/arch/...).
+    distro_id="$(sed -n 's/^ID=//p' "$root_mp/etc/os-release" 2>/dev/null | tr -d '\"' | head -1)"
+    distro_id="${distro_id:-linux}"
 
     if   [[ -f "$root_mp/etc/default/limine" ]]; then
       msg "Detected Limine — running limine-install in chroot"
       run_bl chroot "$root_mp" limine-install || warn "limine-install failed."
+    elif [[ -d "$root_mp/boot/grub2" ]]; then
+      # Fedora/RHEL family: binaries are grub2-*, config lives at /boot/grub2/grub.cfg.
+      msg "Detected GRUB2 (Fedora/RHEL family) — running grub2-install + grub2-mkconfig in chroot"
+      run_bl chroot "$root_mp" grub2-install --target=x86_64-efi --efi-directory="$esp_dir" --bootloader-id="$distro_id" \
+        || warn "grub2-install failed (on UEFI the packaged shim/grub may still boot)."
+      run_bl chroot "$root_mp" grub2-mkconfig -o /boot/grub2/grub.cfg || warn "grub2-mkconfig failed."
     elif [[ -d "$root_mp/boot/grub" ]]; then
+      # Debian/Arch family: grub-* binaries, config at /boot/grub/grub.cfg.
       msg "Detected GRUB — running grub-install + grub-mkconfig in chroot"
-      run_bl chroot "$root_mp" grub-install --target=x86_64-efi --efi-directory="$esp_mp" --bootloader-id=GRUB || warn "grub-install failed."
+      run_bl chroot "$root_mp" grub-install --target=x86_64-efi --efi-directory="$esp_dir" --bootloader-id="$distro_id" || warn "grub-install failed."
       run_bl chroot "$root_mp" grub-mkconfig -o /boot/grub/grub.cfg || warn "grub-mkconfig failed."
-    elif [[ -d "$root_mp/boot/loader" || -d "$root_mp$esp_mp/loader" ]]; then
+    elif [[ -d "$root_mp/boot/loader" || -d "$root_mp$esp_dir/loader" ]]; then
       msg "Detected systemd-boot — running bootctl install in chroot"
       run_bl chroot "$root_mp" bootctl install || warn "bootctl install failed."
     else
       warn "Could not detect the bootloader; the EFI fallback should still boot."
     fi
 
-    for b in proc sys dev; do umount "$root_mp/$b" 2>/dev/null || true; done
-    [[ -n "$esp_n" ]] && umount "$root_mp$esp_mp" 2>/dev/null || true
-    umount "$root_mp" 2>/dev/null || true
+    # Recursively unmount everything we stacked under root_mp (binds + nested mounts).
+    umount -R "$root_mp" 2>/dev/null || {
+      for b in dev sys proc; do umount "$root_mp/$b" 2>/dev/null || true; done
+      umount "$root_mp" 2>/dev/null || true
+    }
     rmdir "$root_mp" 2>/dev/null || true
   fi
 fi
