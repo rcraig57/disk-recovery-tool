@@ -5,9 +5,13 @@ collapsible dark log with the full script output. Owns a ScriptRunner and
 re-enables the page's controls when the job finishes.
 """
 
-from gi.repository import Gtk
+import gi
 
-from runner import ScriptRunner
+gi.require_version("Gtk", "4.0")
+
+from gi.repository import Gtk  # noqa: E402
+
+from runner import ScriptRunner  # noqa: E402
 
 
 class JobView(Gtk.Box):

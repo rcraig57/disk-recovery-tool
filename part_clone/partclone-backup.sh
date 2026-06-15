@@ -271,7 +271,7 @@ META="$DEST/backup-metadata.conf"
 
 # Manifest consumed by the future restore script (tab-separated).
 MANIFEST="$DEST/partitions.tsv"
-printf 'partn\tdevname\tfstype\tengine\timage\tuuid\tsize_bytes\tsha256\n' > "$MANIFEST"
+printf 'partn\tdevname\tfstype\tengine\timage\tuuid\tsize_bytes\tsha256\tlabel\n' > "$MANIFEST"
 
 # Iterate the partitions in on-disk order (PARTS was gathered in section 3b).
 for child in "${PARTS[@]}"; do
@@ -280,6 +280,7 @@ for child in "${PARTS[@]}"; do
 
   fstype="$(lsblk -nro FSTYPE "$dev")"; fstype="${fstype:-none}"
   uuid="$(lsblk -nro UUID "$dev")";     uuid="${uuid:--}"
+  fslabel="$(lsblk -nro LABEL "$dev")"; fslabel="${fslabel:--}"
   size="$(blockdev --getsize64 "$dev")"
   partn="$(lsblk -nro PARTN "$dev" 2>/dev/null || true)"; partn="${partn:-?}"
   engine="$(engine_for_fstype "$fstype")"
@@ -287,8 +288,8 @@ for child in "${PARTS[@]}"; do
   # swap: nothing to image, just record it (restore recreates with mkswap).
   if [[ "$engine" == "SWAP" ]]; then
     warn "$dev is swap — recorded, not imaged."
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-      "$partn" "$dev" "$fstype" "SWAP" "-" "$uuid" "$size" "-" >> "$MANIFEST"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+      "$partn" "$dev" "$fstype" "SWAP" "-" "$uuid" "$size" "-" "$fslabel" >> "$MANIFEST"
     continue
   fi
 
@@ -331,8 +332,8 @@ for child in "${PARTS[@]}"; do
   # filename) so a future `sha256sum -c *.sha256` works from inside $DEST.
   printf '%s  %s\n' "$sum" "$img" > "$DEST/$img.sha256"
 
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-    "$partn" "$dev" "$fstype" "$engine" "$img" "$uuid" "$size" "$sum" >> "$MANIFEST"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$partn" "$dev" "$fstype" "$engine" "$img" "$uuid" "$size" "$sum" "$fslabel" >> "$MANIFEST"
   ok "Done $dev -> $img ($(du -h "$DEST/$img" | cut -f1))"
 done
 

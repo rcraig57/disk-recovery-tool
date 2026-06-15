@@ -219,15 +219,20 @@ partprobe "$TARGET"; udevadm settle 2>/dev/null || true
 # --------------------------------------------------------------------------- #
 # 6. Restore each partition image (swap is recreated, not restored).
 # --------------------------------------------------------------------------- #
-while IFS=$'\t' read -r partn _ fstype engine image uuid _ _; do
+while IFS=$'\t' read -r partn _ fstype engine image uuid _ _ fslabel; do
   [[ "$partn" == "partn" ]] && continue
   tdev="$(part_dev "$TARGET" "$partn")"
   [[ -b "$tdev" ]] || die "Expected target partition $tdev did not appear."
 
   if [[ "$engine" == "SWAP" ]]; then
     msg "Recreating swap on $tdev (UUID $uuid)"
-    if [[ "$uuid" != "-" ]]; then mkswap -U "$uuid" "$tdev" >/dev/null
-    else mkswap "$tdev" >/dev/null; fi
+    # Rebuild the swap area, preserving its UUID (fstab-relevant) and, when the
+    # backup recorded one, its LABEL. Older 8-column backups have no label field,
+    # so $fslabel is empty and we simply skip -L.
+    swap_opts=()
+    [[ "$uuid"           != "-" ]] && swap_opts+=(-U "$uuid")
+    [[ -n "${fslabel:-}" && "$fslabel" != "-" ]] && swap_opts+=(-L "$fslabel")
+    mkswap "${swap_opts[@]+"${swap_opts[@]}"}" "$tdev" >/dev/null
     continue
   fi
 

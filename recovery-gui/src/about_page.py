@@ -1,8 +1,12 @@
 """About / Help page."""
 
-import config
-from gi.repository import Gtk
-from widgets import make_intro, make_title
+import gi
+
+gi.require_version("Gtk", "4.0")
+
+import config  # noqa: E402
+from gi.repository import Gtk  # noqa: E402
+from widgets import make_intro, make_title  # noqa: E402
 
 ABOUT = (
     f"<b>{config.APP_NAME}</b>  v{config.APP_VERSION}\n\n"

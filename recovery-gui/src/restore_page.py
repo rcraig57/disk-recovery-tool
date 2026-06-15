@@ -6,12 +6,16 @@ the exact target. The backend additionally refuses mounted disks / the backup's
 own disk and verifies every image checksum before writing.
 """
 
-import os
+import gi
 
-import config
-from gi.repository import Gtk
-from jobview import JobView
-from widgets import DiskPicker, PathChooser, make_intro, make_title
+gi.require_version("Gtk", "4.0")
+
+import os  # noqa: E402
+
+import config  # noqa: E402
+from gi.repository import Gtk  # noqa: E402
+from jobview import JobView  # noqa: E402
+from widgets import DiskPicker, PathChooser, make_intro, make_title  # noqa: E402
 
 INTRO = (
     "Restore a backup folder (made on the Backup page) onto a target disk. "

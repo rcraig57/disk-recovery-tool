@@ -1,7 +1,11 @@
 """Small reusable widgets: page titles, a disk picker, and path chooser rows."""
 
-import disks
-from gi.repository import GLib, Gtk
+import gi
+
+gi.require_version("Gtk", "4.0")
+
+import disks  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
 
 
 def make_title(text: str) -> Gtk.Label:
