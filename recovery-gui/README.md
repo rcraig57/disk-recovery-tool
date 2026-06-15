@@ -34,8 +34,8 @@ src/
   config.py                   app constants + backend-script discovery
   style.css                   ATT-style theme
 data/
-  org.ohmychadwm.recovery.policy   polkit policy (for a packaged install)
-  recovery-tool.desktop            desktop entry
+  io.github.rcraig57.DiskRecoveryTool.policy  polkit policy (for a packaged install)
+  recovery-tool.desktop                       desktop entry
 ```
 
 ## How it talks to the backend

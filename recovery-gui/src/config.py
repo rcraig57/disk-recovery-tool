@@ -8,10 +8,10 @@ output. Keeping the scripts authoritative means the CLI and GUI can never drift.
 import os
 from pathlib import Path
 
-APP_ID = "org.ohmychadwm.recovery"
+APP_ID = "io.github.rcraig57.DiskRecoveryTool"
 APP_NAME = "Disk Recovery Tool"
 APP_VERSION = "0.1.0"
-ICON_NAME = "org.ohmychadwm.recovery"
+ICON_NAME = "io.github.rcraig57.DiskRecoveryTool"
 
 _HERE = Path(__file__).resolve().parent  # .../recovery-gui/src
 

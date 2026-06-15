@@ -64,8 +64,8 @@ package() {
   install -m644 recovery-gui/src/*.py recovery-gui/src/style.css "$share/src/"
 
   # --- data: icon used in-app by the About page (config.icon_file()) ---
-  install -Dm644 recovery-gui/data/icons/hicolor/scalable/apps/org.ohmychadwm.recovery.svg \
-    "$share/data/icons/hicolor/scalable/apps/org.ohmychadwm.recovery.svg"
+  install -Dm644 recovery-gui/data/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg \
+    "$share/data/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg"
 
   # --- backend scripts (authoritative backup/restore logic) ---
   install -dm755 "$share/scripts"
@@ -82,12 +82,12 @@ package() {
     "$pkgdir/usr/share/applications/recovery-tool.desktop"
 
   # --- polkit policy (custom auth message for the installed binary) ---
-  install -Dm644 recovery-gui/data/org.ohmychadwm.recovery.policy \
-    "$pkgdir/usr/share/polkit-1/actions/org.ohmychadwm.recovery.policy"
+  install -Dm644 recovery-gui/data/io.github.rcraig57.DiskRecoveryTool.policy \
+    "$pkgdir/usr/share/polkit-1/actions/io.github.rcraig57.DiskRecoveryTool.policy"
 
   # --- system icon (titlebar + application menu) ---
-  install -Dm644 recovery-gui/data/icons/hicolor/scalable/apps/org.ohmychadwm.recovery.svg \
-    "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.ohmychadwm.recovery.svg"
+  install -Dm644 recovery-gui/data/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg"
 
   # --- docs ---
   install -Dm644 recovery-gui/README.md "$pkgdir/usr/share/doc/$_pkgname/README.md"

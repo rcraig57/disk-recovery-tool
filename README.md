@@ -1,6 +1,7 @@
 # Disk Recovery Tool
 
-Whole-disk **backup and restore** for Arch-family Linux, built on
+Whole-disk **backup and restore** for **Arch, Debian, and Fedora** (and their
+derivatives), built on
 [partclone](https://partclone.org) + [zstd](https://github.com/facebook/zstd),
 with a GTK4 graphical front end styled after Erik Dubois' Arch Linux Tweak Tool.
 
@@ -37,26 +38,43 @@ so the GUI and CLI never drift apart.
 ```
 recovery-gui/        GTK4 application (launcher, src/, data/)
 part_clone/          backend: partclone-backup.sh, partclone-restore.sh, self-tests
-PKGBUILD             Arch package (-git)
+install.sh           universal installer (Arch / Debian / Fedora)
+PKGBUILD             Arch native package (-git)
 disk-recovery-tool.install
 LICENSE / NOTICE     GPL-3.0-or-later + credits
-docs/                notes and checklists
 ```
 
-## Install (Arch / CachyOS / Kiro / EndeavourOS / …)
+## Install
+
+The universal installer works on **Arch, Debian, and Fedora** and their
+derivatives. It reads `/etc/os-release`, installs the dependencies with your
+distro's package manager (`pacman` / `apt` / `dnf`), and copies the application
+into place.
+
+```
+git clone https://github.com/rcraig57/disk-recovery-tool.git
+cd disk-recovery-tool
+sudo ./install.sh
+```
+
+> Run the **installer** with `sudo` (it writes under `/usr` and installs
+> packages). Do **not** run the application itself as root — the launcher
+> elevates the whole app once via `pkexec`, and your desktop's polkit agent
+> prompts for the admin password. partclone, losetup and mount all need root.
+
+Afterwards launch **Disk Recovery Tool** from your application menu, or run
+`recovery-tool`. To remove it: `sudo ./uninstall.sh`.
+
+### Arch (native package)
+
+On Arch and Arch-based distros you can equally use the PKGBUILD, which pulls the
+dependencies and builds a tracked package:
 
 ```
 git clone https://github.com/rcraig57/disk-recovery-tool.git
 cd disk-recovery-tool
 makepkg -si
 ```
-
-`makepkg -si` pulls the dependencies and installs the package. Afterwards launch
-**Disk Recovery Tool** from your application menu, or run `recovery-tool`.
-
-> Do **not** run it as root yourself — the launcher elevates the whole app once
-> via `pkexec` (your desktop's polkit agent prompts for the admin password).
-> partclone, losetup and mount all need root.
 
 ## Use it from the terminal (no GUI / rescue environment)
 
@@ -93,6 +111,9 @@ command line already match.
 `parted` `btrfs-progs` `e2fsprogs` `polkit`. Optional: `xorg-xhost` (to run the
 GUI as root under X11/XWayland), `limine`/`grub` (bootloader re-registration),
 `dosfstools` (loopback self-test). The PKGBUILD declares all of these.
+
+`install.sh` resolves these automatically per distro; the names above are the
+Arch set (Debian/Fedora equivalents are mapped inside the installer).
 
 ## Credits & license
 

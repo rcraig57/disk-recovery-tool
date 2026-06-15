@@ -10,7 +10,7 @@
 -->
 <policyconfig>
   <vendor>Disk Recovery Tool</vendor>
-  <action id="org.ohmychadwm.recovery.run">
+  <action id="io.github.rcraig57.DiskRecoveryTool.run">
     <description>Run the Disk Recovery Tool</description>
     <message>Authentication is required to run the Disk Recovery Tool (it reads and writes whole disks).</message>
     <icon_name>drive-harddisk</icon_name>

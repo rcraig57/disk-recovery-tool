@@ -87,7 +87,7 @@ msg "Installing dependencies (${#PKGS[@]} packages)..."
 #    the launcher and config.py find everything at the paths they already expect.
 # --------------------------------------------------------------------------- #
 SHARE=/usr/share/recovery-tool
-ICON_REL=icons/hicolor/scalable/apps/org.ohmychadwm.recovery.svg
+ICON_REL=icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg
 
 msg "Installing application files..."
 install -dm755 "$SHARE/src"
@@ -103,8 +103,8 @@ install -m755  "$SRC"/part_clone/test-grow-loopback.sh "$SRC"/part_clone/test-bo
 
 install -Dm755 "$SRC/recovery-gui/recovery-tool" /usr/bin/recovery-tool
 install -Dm644 "$SRC/recovery-gui/data/recovery-tool.desktop" /usr/share/applications/recovery-tool.desktop
-install -Dm644 "$SRC/recovery-gui/data/org.ohmychadwm.recovery.policy" \
-  /usr/share/polkit-1/actions/org.ohmychadwm.recovery.policy
+install -Dm644 "$SRC/recovery-gui/data/io.github.rcraig57.DiskRecoveryTool.policy" \
+  /usr/share/polkit-1/actions/io.github.rcraig57.DiskRecoveryTool.policy
 install -Dm644 "$SRC/recovery-gui/data/$ICON_REL" "/usr/share/$ICON_REL"
 
 # --------------------------------------------------------------------------- #

@@ -12,8 +12,8 @@ set -euo pipefail
 rm -rf /usr/share/recovery-tool
 rm -f  /usr/bin/recovery-tool
 rm -f  /usr/share/applications/recovery-tool.desktop
-rm -f  /usr/share/polkit-1/actions/org.ohmychadwm.recovery.policy
-rm -f  /usr/share/icons/hicolor/scalable/apps/org.ohmychadwm.recovery.svg
+rm -f  /usr/share/polkit-1/actions/io.github.rcraig57.DiskRecoveryTool.policy
+rm -f  /usr/share/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg
 
 gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || true
 update-desktop-database -q 2>/dev/null || true
