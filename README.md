@@ -32,12 +32,20 @@ so the GUI and CLI never drift apart.
   EFI fallback with no extra step.
 - **GTK4 GUI** with a live progress bar (parsed from partclone) and a full log,
   plus a CLI for scripting and rescue environments.
+- **USB Writer** — write an installer/live **ISO** to a USB stick with `dd`
+  (`oflag=sync`) and a live progress bar, or **format** a stick as FAT32, exFAT,
+  NTFS, or ext4. Lists removable devices only by default and names the exact
+  device in a confirmation dialog before it writes or formats.
+
+![Disk Recovery Tool — USB Writer page](images/usb-writer.png)
 
 ## Repository layout
 
 ```
 recovery-gui/        GTK4 application (launcher, src/, data/)
-part_clone/          backend: partclone-backup.sh, partclone-restore.sh, self-tests
+part_clone/          backend: partclone-backup.sh, partclone-restore.sh,
+                     usb-write.sh, usb-format.sh, self-tests
+images/              screenshots used in the docs
 install.sh           universal installer (Arch / Debian / Fedora)
 PKGBUILD             Arch native package (-git)
 disk-recovery-tool.install

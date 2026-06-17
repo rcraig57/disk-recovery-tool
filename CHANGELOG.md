@@ -4,7 +4,7 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] — 2026-06-17
 
 ### Added
 - **USB Writer page.** A new left-sidebar section (between Restore and About)

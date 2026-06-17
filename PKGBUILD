@@ -17,7 +17,7 @@ _repo="https://github.com/rcraig57/disk-recovery-tool.git"
 
 _pkgname=disk-recovery-tool
 pkgname=disk-recovery-tool-git
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="GTK4 whole-disk backup/restore + USB ISO-writer and formatter (partclone + zstd), styled like Arch Linux Tweak Tool"
 arch=('x86_64')
