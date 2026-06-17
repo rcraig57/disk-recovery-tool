@@ -12,7 +12,9 @@ Disk Recovery Tool installed.
   Do NOT run it as root — the launcher elevates the whole app via polkit
   (you'll be prompted for the admin password). Backups image only the used
   blocks of each filesystem; restores ERASE the target disk and are guarded by
-  a typed ERASE confirmation.
+  a typed ERASE confirmation. The USB Writer can flash an ISO to a USB stick or
+  format one, listing removable devices only and confirming the exact target
+  first.
 
 EOF
 }

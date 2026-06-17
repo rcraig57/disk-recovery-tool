@@ -1,11 +1,11 @@
 [Desktop Entry]
 Name=Disk Recovery Tool
 GenericName=Disk Backup and Restore
-Comment=Whole-disk backup and restore with partclone + zstd
+Comment=Whole-disk backup and restore (partclone + zstd), plus a USB ISO writer and formatter
 Exec=recovery-tool
 Icon=io.github.rcraig57.DiskRecoveryTool
 Terminal=false
 Type=Application
 Categories=Utility;Archiving;Filesystem;
-Keywords=backup;restore;partclone;disk;image;recovery;clone;
+Keywords=backup;restore;partclone;disk;image;recovery;clone;iso;usb;flash;writer;format;dd;
 StartupNotify=true

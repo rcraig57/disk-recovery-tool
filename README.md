@@ -8,9 +8,10 @@ with a GTK4 graphical front end styled after Erik Dubois' Arch Linux Tweak Tool.
 It images only the **used blocks** of each filesystem (so a 1 TB disk that is
 100 GB full produces ~100 GB, not 1 TB), preserves **btrfs snapshots and
 subvolumes** and **filesystem UUIDs**, verifies every image with SHA-256, and can
-grow the last partition onto a larger disk on restore. The GUI is a thin wrapper:
-every operation runs the same audited shell scripts you can run from a terminal,
-so the GUI and CLI never drift apart.
+grow the last partition onto a larger disk on restore. It also includes a
+**USB Writer** for flashing an installer/live ISO to a USB stick or formatting
+one. The GUI is a thin wrapper: every operation runs the same audited shell
+scripts you can run from a terminal, so the GUI and CLI never drift apart.
 
 > **Heads up:** restoring **erases the target disk**. It is guarded by a typed
 > `ERASE` confirmation and a final dialog, and the backend refuses mounted disks
@@ -102,6 +103,21 @@ Both are interactive by default and accept flags for unattended use
 (`--yes`, `--erase`, `--grow`/`--no-grow`, `--bootloader`/`--no-bootloader`,
 `--no-reboot`). The source disk for a backup must be unmounted — image a disk you
 did **not** boot from (e.g. from a live USB, or a second drive).
+
+The USB Writer scripts are standalone too. Write an ISO to a USB device:
+
+```
+sudo ./part_clone/usb-write.sh --yes /path/to/image.iso /dev/sdX
+```
+
+Format a USB device (FAT32 / exFAT / NTFS / ext4):
+
+```
+sudo ./part_clone/usb-format.sh --yes --fs fat32 --label "USB STICK" /dev/sdX
+```
+
+Both ERASE the whole target device and refuse a device holding the running
+system.
 
 ## How it works
 
