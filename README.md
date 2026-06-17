@@ -116,9 +116,12 @@ command line already match.
 ## Dependencies
 
 `python` `python-gobject` `gtk4` `partclone` `zstd` `util-linux` `gptfdisk`
-`parted` `btrfs-progs` `e2fsprogs` `polkit`. Optional: `xorg-xhost` (to run the
-GUI as root under X11/XWayland), `limine`/`grub` (bootloader re-registration),
-`dosfstools` (loopback self-test). The PKGBUILD declares all of these.
+`parted` `btrfs-progs` `e2fsprogs` `dosfstools` `exfatprogs` `ntfs-3g`
+`coreutils` `polkit`. The last four serve the USB Writer: `dosfstools`
+(`mkfs.fat`/FAT32), `exfatprogs` (`mkfs.exfat`), `ntfs-3g` (`mkfs.ntfs`), and
+`coreutils` (`dd`, `stdbuf`); `e2fsprogs` covers `mkfs.ext4`. Optional:
+`xorg-xhost` (to run the GUI as root under X11/XWayland), `limine`/`grub`
+(bootloader re-registration). The PKGBUILD declares all of these.
 
 `install.sh` resolves these automatically per distro; the names above are the
 Arch set (Debian/Fedora equivalents are mapped inside the installer).
