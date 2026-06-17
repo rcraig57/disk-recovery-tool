@@ -28,11 +28,17 @@ class DiskPicker(Gtk.Box):
 
     include_mounted=False hides disks with a mounted partition (the running
     system); the backend scripts refuse those anyway.
+
+    removable_only=True keeps only removable (USB) devices — used by the USB
+    Writer page so an internal drive can't be picked by accident. It can be
+    toggled at runtime with set_removable_only().
     """
 
-    def __init__(self, label_text: str, include_mounted: bool = False):
+    def __init__(self, label_text: str, include_mounted: bool = False,
+                 removable_only: bool = False):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.include_mounted = include_mounted
+        self.removable_only = removable_only
         self._disks = []
 
         label = Gtk.Label(xalign=0, label=label_text)
@@ -52,8 +58,15 @@ class DiskPicker(Gtk.Box):
 
         self.refresh()
 
+    def set_removable_only(self, flag: bool):
+        """Switch between removable-only and all-disks, then rescan."""
+        self.removable_only = bool(flag)
+        self.refresh()
+
     def refresh(self):
         self._disks = disks.list_disks(include_mounted=self.include_mounted)
+        if self.removable_only:
+            self._disks = [d for d in self._disks if d.get("removable")]
         # Rebuild the string model.
         while self.model.get_n_items() > 0:
             self.model.remove(0)

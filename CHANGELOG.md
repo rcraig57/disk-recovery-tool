@@ -4,6 +4,30 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **USB Writer page.** A new left-sidebar section (between Restore and About)
+  with a segmented **Write ISO / Format** toggle.
+  - *Write ISO* — pick an `.iso` and a target device; the backend writes it with
+    `dd … oflag=sync` and streams a live percentage to the shared progress bar
+    (derived from `dd status=progress` against the image size).
+  - *Format* — wipe a device and create a single-partition **FAT32 / exFAT /
+    NTFS / ext4** filesystem with an optional volume label, modeled on Linux
+    Mint's `mintstick`.
+  - Safety: the target picker lists **removable (USB) devices only** by default,
+    with a *Show all disks* escape hatch, and every run requires a confirmation
+    dialog naming the exact device. The backend hard-refuses any device holding
+    a partition mounted at `/`, `/boot`, or `/boot/*`.
+- **Backend scripts** `part_clone/usb-write.sh` and `part_clone/usb-format.sh`
+  (authoritative, same pattern as the partclone scripts).
+
+### Changed
+- **Dependencies** gained `dosfstools`, `exfatprogs`, and `ntfs-3g` (the `mkfs`
+  tools for the format filesystems); installer and PKGBUILD updated.
+- `DiskPicker` learned a `removable_only` mode (toggleable at runtime); disk
+  labels now show a `[mounted]` marker where relevant.
+
 ## [0.1.0] — 2026-06-15
 
 First cross-distro release. The tool now installs and is verified on the three

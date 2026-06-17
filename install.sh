@@ -63,6 +63,7 @@ case "$FAMILY" in
   arch)
     PM_INSTALL=(pacman -S --needed --noconfirm)
     PKGS=(partclone zstd gptfdisk parted btrfs-progs e2fsprogs util-linux
+          dosfstools exfatprogs ntfs-3g coreutils
           polkit python python-gobject gtk4)
     ;;
   debian)
@@ -70,11 +71,13 @@ case "$FAMILY" in
     PM_INSTALL=(apt-get install -y)
     apt-get update -qq || true
     PKGS=(partclone zstd gdisk parted btrfs-progs e2fsprogs util-linux
+          dosfstools exfatprogs ntfs-3g coreutils
           policykit-1 python3 python3-gi gir1.2-gtk-4.0 libgtk-4-1)
     ;;
   fedora)
     PM_INSTALL=(dnf install -y)
     PKGS=(partclone zstd gdisk parted btrfs-progs e2fsprogs util-linux
+          dosfstools exfatprogs ntfs-3g coreutils
           polkit python3 python3-gobject gtk4)
     ;;
 esac
@@ -96,7 +99,8 @@ install -m644  "$SRC"/recovery-gui/src/*.py "$SRC"/recovery-gui/src/style.css "$
 install -Dm644 "$SRC/recovery-gui/data/$ICON_REL" "$SHARE/data/$ICON_REL"
 
 install -dm755 "$SHARE/scripts"
-install -m755  "$SRC/part_clone/partclone-backup.sh" "$SRC/part_clone/partclone-restore.sh" "$SHARE/scripts/"
+install -m755  "$SRC/part_clone/partclone-backup.sh" "$SRC/part_clone/partclone-restore.sh" \
+  "$SRC/part_clone/usb-write.sh" "$SRC/part_clone/usb-format.sh" "$SHARE/scripts/"
 # Optional self-test helpers (ignore if absent).
 install -m755  "$SRC"/part_clone/test-grow-loopback.sh "$SRC"/part_clone/test-bootloader-detect.sh \
   "$SHARE/scripts/" 2>/dev/null || true

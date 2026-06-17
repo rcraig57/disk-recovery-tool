@@ -19,7 +19,7 @@ _pkgname=disk-recovery-tool
 pkgname=disk-recovery-tool-git
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="GTK4 whole-disk backup and restore tool (partclone + zstd), styled like Arch Linux Tweak Tool"
+pkgdesc="GTK4 whole-disk backup/restore + USB ISO-writer and formatter (partclone + zstd), styled like Arch Linux Tweak Tool"
 arch=('x86_64')
 url="${_repo%.git}"
 license=('GPL-3.0-or-later')
@@ -31,16 +31,19 @@ depends=(
   'zstd'
   'util-linux'      # lsblk, blkid, findmnt, sfdisk, blockdev, wipefs, mkswap, mount
   'gptfdisk'        # sgdisk
-  'parted'          # partprobe
+  'parted'          # partprobe, partition table + partition creation (USB format)
   'btrfs-progs'     # btrfs (resize + superblock size estimate)
-  'e2fsprogs'       # dumpe2fs, e2fsck, resize2fs
+  'e2fsprogs'       # dumpe2fs, e2fsck, resize2fs, mkfs.ext4 (USB format)
+  'dosfstools'      # mkfs.fat — FAT32 (USB format)
+  'exfatprogs'      # mkfs.exfat — exFAT (USB format)
+  'ntfs-3g'         # mkfs.ntfs — NTFS (USB format)
+  'coreutils'       # dd, stdbuf (USB write progress streaming)
   'polkit'          # pkexec
 )
 optdepends=(
   'xorg-xhost: run the GUI as root under an X11/XWayland session'
   'limine: bootloader re-registration when restoring a Limine system to a new machine'
   'grub: bootloader re-registration when restoring a GRUB system to a new machine'
-  'dosfstools: run the loopback grow self-test (test-grow-loopback.sh)'
 )
 makedepends=('git')
 provides=("$_pkgname")
@@ -67,9 +70,10 @@ package() {
   install -Dm644 recovery-gui/data/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg \
     "$share/data/icons/hicolor/scalable/apps/io.github.rcraig57.DiskRecoveryTool.svg"
 
-  # --- backend scripts (authoritative backup/restore logic) ---
+  # --- backend scripts (authoritative backup/restore + USB writer logic) ---
   install -dm755 "$share/scripts"
-  install -m755 part_clone/partclone-backup.sh part_clone/partclone-restore.sh "$share/scripts/"
+  install -m755 part_clone/partclone-backup.sh part_clone/partclone-restore.sh \
+    part_clone/usb-write.sh part_clone/usb-format.sh "$share/scripts/"
   # optional self-test / diagnostic helpers (ignore if absent)
   install -m755 part_clone/test-grow-loopback.sh part_clone/test-bootloader-detect.sh \
     "$share/scripts/" 2>/dev/null || true

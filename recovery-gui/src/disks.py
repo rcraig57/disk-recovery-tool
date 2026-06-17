@@ -71,4 +71,10 @@ def list_disks(include_mounted: bool = False) -> list:
 
 def describe(disk: dict) -> str:
     """One-line label for a disk picker row."""
-    return f"{disk['path']}  —  {human_size(disk['size'])}  {disk['model']}"
+    label = f"{disk['path']}  —  {human_size(disk['size'])}  {disk['model']}"
+    # The USB Writer page can list mounted (auto-mounted) sticks; flag them so the
+    # user knows the backend will unmount before writing. Backup/Restore exclude
+    # mounted disks, so this marker never shows there.
+    if disk.get("mounted"):
+        label += "  [mounted]"
+    return label

@@ -53,5 +53,15 @@ def restore_script() -> Path:
     return backend_dir() / "partclone-restore.sh"
 
 
+def write_script() -> Path:
+    """USB Writer backend: dd an image onto a whole device (USB Writer page)."""
+    return backend_dir() / "usb-write.sh"
+
+
+def format_script() -> Path:
+    """USB Writer backend: wipe + create a filesystem on a whole device."""
+    return backend_dir() / "usb-format.sh"
+
+
 def style_path() -> Path:
     return _HERE / "style.css"
