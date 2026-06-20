@@ -7,5 +7,5 @@ Icon=io.github.rcraig57.DiskRecoveryTool
 Terminal=false
 Type=Application
 Categories=Utility;Archiving;Filesystem;
-Keywords=backup;restore;partclone;disk;image;recovery;clone;iso;usb;flash;writer;format;dd;
+Keywords=backup;restore;partclone;disk;image;recovery;clone;iso;usb;flash;writer;format;dd;packages;manifest;
 StartupNotify=true

@@ -4,6 +4,26 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-06-20
+
+### Added
+- **Packages page.** Export a manifest of the packages **you** installed (not the
+  base system), then reinstall them from that manifest after a restore or a fresh
+  install. Works across all three families: native/explicit packages come from
+  `pacman -Qqen` (Arch), `apt-mark showmanual` (Debian), and
+  `dnf repoquery --userinstalled` / `dnf history userinstalled` (Fedora). AUR /
+  foreign packages and Flatpak apps are written into a **labeled, reference-only**
+  section (`#aur:` / `#flatpak:`) and are not reinstalled automatically. Import is
+  fully non-interactive (`--noconfirm` / `-y`), pre-filters the list against what's
+  actually available so one renamed package can't abort the whole transaction, and
+  reports the skipped names. A **same-manager guardrail** refuses a manifest whose
+  package manager differs from the running system's — enforced both in the GUI
+  (Import disabled with a reason) and in the backend script (hard refusal), since
+  package names are not portable across managers. The manifest is chown'd back to
+  the launching user so it stays editable. Backends:
+  `part_clone/packages-export.sh`, `part_clone/packages-import.sh`. New sidebar
+  order: Backup · Rescue · Restore · Packages · Verify · USB Writer · About.
+
 ## [0.3.0] — 2026-06-20
 
 ### Added

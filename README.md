@@ -35,6 +35,11 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
   and resumable to retry only the bad areas.
 - **Restore to a same or larger disk**, optionally growing the last partition to
   fill the extra space.
+- **Packages export / import** — save a manifest of the packages you installed
+  (not the base system) and reinstall them after a restore or fresh install, on
+  Arch, Debian, or Fedora. AUR/foreign and Flatpak apps are recorded for
+  reference; a same-manager guardrail blocks importing a manifest onto a system
+  with a different package manager.
 - **Optional bootloader re-registration** (Limine / GRUB / systemd-boot) for
   restoring onto a different machine; same-machine restores boot via the existing
   EFI fallback with no extra step.
@@ -50,6 +55,8 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
 
 ![Disk Recovery Tool — Verify page](images/verify.png)
 
+![Disk Recovery Tool — Packages page](images/packages.png)
+
 ![Disk Recovery Tool — USB Writer page](images/usb-writer.png)
 
 ## Repository layout
@@ -58,7 +65,8 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
 recovery-gui/        GTK4 application (launcher, src/, data/)
 part_clone/          backend: partclone-backup.sh, partclone-restore.sh,
                      verify-backup.sh, ddrescue-rescue.sh,
-                     usb-write.sh, usb-format.sh, self-tests
+                     usb-write.sh, usb-format.sh,
+                     packages-export.sh, packages-import.sh, self-tests
 images/              screenshots used in the docs
 install.sh           universal installer (Arch / Debian / Fedora)
 PKGBUILD             Arch native package (-git)

@@ -10,7 +10,7 @@ from pathlib import Path
 
 APP_ID = "io.github.rcraig57.DiskRecoveryTool"
 APP_NAME = "Disk Recovery Tool"
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 ICON_NAME = "io.github.rcraig57.DiskRecoveryTool"
 
 _HERE = Path(__file__).resolve().parent  # .../recovery-gui/src
@@ -71,6 +71,16 @@ def write_script() -> Path:
 def format_script() -> Path:
     """USB Writer backend: wipe + create a filesystem on a whole device."""
     return backend_dir() / "usb-format.sh"
+
+
+def packages_export_script() -> Path:
+    """Packages backend: write a manifest of user-installed packages (Packages page)."""
+    return backend_dir() / "packages-export.sh"
+
+
+def packages_import_script() -> Path:
+    """Packages backend: reinstall packages from a manifest (Packages page)."""
+    return backend_dir() / "packages-import.sh"
 
 
 def style_path() -> Path:

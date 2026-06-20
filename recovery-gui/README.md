@@ -3,8 +3,9 @@
 A GTK4 front end for the whole-disk **backup** and **restore** scripts in
 `../part_clone/`, plus **Rescue** (ddrescue salvage of a failing disk),
 **Verify** (re-check a backup's checksums), a SMART health pre-flight in the
-disk pickers, and a **USB Writer** (write an ISO to a USB device, or format
-one). Look and feel modelled on Erik Dubois' Arch Linux Tweak Tool. The GUI is a
+disk pickers, a **USB Writer** (write an ISO to a USB device, or format one),
+and **Packages** (export/reinstall the packages you installed). Look and feel
+modelled on Erik Dubois' Arch Linux Tweak Tool. The GUI is a
 thin wrapper: every operation runs the same audited shell scripts you can run
 from a terminal, so the CLI and GUI never drift.
 
@@ -30,6 +31,7 @@ src/
   backup_page.py              Backup page
   rescue_page.py              Rescue page (ddrescue failing-disk salvage)
   restore_page.py             Restore page (ERASE-guarded)
+  packages_page.py            Packages page (export / reinstall package lists)
   verify_page.py              Verify page (re-check backup checksums)
   usb_page.py                 USB Writer page (write ISO / format, confirm dialog)
   about_page.py               About / Help
@@ -56,6 +58,9 @@ a prompt:
   (--bootloader|--no-bootloader) BACKUP_DIR TARGET` (with `BOOTLOADER_DRYRUN=1`
   when the dry-run box is ticked).
 - **Verify:** `verify-backup.sh [--deep] BACKUP_DIR`.
+- **Packages export:** `packages-export.sh OUTPUT_DIR`.
+- **Packages import:** `packages-import.sh MANIFEST_FILE` (refuses a manifest
+  whose `# manager:` header differs from this system's package manager).
 - **USB write:** `usb-write.sh --yes IMAGE DEVICE`.
 - **USB format:** `usb-format.sh --yes --fs FSTYPE [--label L] [--owner UID:GID]
   DEVICE`.
