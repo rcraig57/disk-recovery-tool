@@ -104,7 +104,8 @@ class BackupPage(Gtk.Box):
         argv += [disk["path"], dest]
 
         self._set_inputs_sensitive(False)
-        self.job.run(argv, on_finished=lambda _rc: self._set_inputs_sensitive(True))
+        self.job.run(argv, on_finished=lambda _rc: self._set_inputs_sensitive(True),
+                     noun="Backup")
 
     def _on_cancel(self, _button):
         self.job.cancel()

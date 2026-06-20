@@ -18,8 +18,8 @@ partclone — https://partclone.org  (GPL-2.0-or-later)
 
 Arch Linux Tweak Tool (ATT) by Erik Dubois — https://www.arcolinux.com  (GPL-3.0)
     The look and feel of the GTK4 interface, the pkexec/Wayland launcher
-    pattern, and several CSS values are modelled on ATT. With thanks to Erik
-    Dubois and the ArcoLinux community.
+    pattern, the in-app toast notification, and several CSS values are modelled
+    on ATT. With thanks to Erik Dubois and the ArcoLinux community.
 
 mintstick by Clement Lefebvre / Linux Mint — https://github.com/linuxmint/mintstick  (GPL-2.0-or-later)
     The USB Writer's format backend (usb-format.sh) follows mintstick's approach:

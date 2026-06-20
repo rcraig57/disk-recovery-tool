@@ -53,3 +53,22 @@ label#error_label {
 progressbar text {
     font-size: 12px;
 }
+
+/* Transient toast notification (widgets.Toast). Explicit colours so it reads
+   the same under the light/dark themes of Arch, Debian and Fedora. */
+#toast {
+    background-color: #303336;
+    color: #fcfcfc;
+    border-radius: 9px;
+    padding: 10px 18px;
+    margin: 6px;
+    box-shadow: 0 2px 6px alpha(black, 0.4);
+}
+
+#toast.toast-success {
+    background-color: #26a269;
+}
+
+#toast.toast-error {
+    background-color: #c01c28;
+}

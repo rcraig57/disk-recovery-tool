@@ -12,6 +12,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
 from runner import ScriptRunner  # noqa: E402
+from widgets import notify  # noqa: E402
 
 
 class JobView(Gtk.Box):
@@ -19,6 +20,7 @@ class JobView(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.runner = None
         self._on_finished = None
+        self._noun = "Operation"
 
         self.step_label = Gtk.Label(xalign=0)
         self.step_label.set_name("step_label")
@@ -62,9 +64,13 @@ class JobView(Gtk.Box):
         self.textview.get_buffer().set_text("")
 
     # -- run lifecycle ------------------------------------------------------ #
-    def run(self, argv, on_finished=None):
-        """Start argv. on_finished(rc) is called (on the main thread) at exit."""
+    def run(self, argv, on_finished=None, noun="Operation"):
+        """Start argv. on_finished(rc) is called (on the main thread) at exit.
+
+        ``noun`` names the task (e.g. "Backup") for the completion toast.
+        """
         self._on_finished = on_finished
+        self._noun = noun
         self.clear_log()
         self.progress.set_fraction(0.0)
         self.progress.set_text("Starting…")
@@ -108,13 +114,16 @@ class JobView(Gtk.Box):
         if error:
             self.step_label.set_text(f"Failed to start: {error}")
             self.progress.set_text("Error")
+            notify(self, f"{self._noun} failed to start", "error")
         elif rc == 0:
             self.step_label.set_text("Done.")
             self.progress.set_fraction(1.0)
             self.progress.set_text("Complete")
+            notify(self, f"{self._noun} complete", "success")
         else:
             self.step_label.set_text(f"Stopped (exit code {rc}). See the log.")
             self.progress.set_text(f"Failed (exit {rc})")
+            notify(self, f"{self._noun} stopped (exit {rc})", "error")
         if self._on_finished:
             self._on_finished(rc if not error else -1)
         return False

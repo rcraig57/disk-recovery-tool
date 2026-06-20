@@ -247,6 +247,7 @@ class USBPage(Gtk.Box):
 
     def _launch(self, payload):
         action, disk, iso, fstype, label = payload
+        noun = "USB write" if action == "write" else "USB format"
         if action == "write":
             argv = [str(config.write_script()), "--yes", iso, disk["path"]]
         else:
@@ -258,7 +259,8 @@ class USBPage(Gtk.Box):
             argv.append(disk["path"])
 
         self._set_inputs_sensitive(False)
-        self.job.run(argv, on_finished=lambda _rc: self._set_inputs_sensitive(True))
+        self.job.run(argv, on_finished=lambda _rc: self._set_inputs_sensitive(True),
+                     noun=noun)
 
     def _on_cancel(self, _button):
         self.job.cancel()

@@ -175,7 +175,8 @@ class RestorePage(Gtk.Box):
         # Reset the gate so a second run needs ERASE typed again.
         self.erase_entry.set_text("")
         self._set_inputs_sensitive(False)
-        self.job.run(argv, on_finished=lambda _rc: self._set_inputs_sensitive(True))
+        self.job.run(argv, on_finished=lambda _rc: self._set_inputs_sensitive(True),
+                     noun="Restore")
 
     def _on_cancel(self, _button):
         self.job.cancel()

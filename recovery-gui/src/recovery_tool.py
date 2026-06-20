@@ -20,6 +20,7 @@ from about_page import AboutPage  # noqa: E402
 from backup_page import BackupPage  # noqa: E402
 from restore_page import RestorePage  # noqa: E402
 from usb_page import USBPage  # noqa: E402
+from widgets import Toast  # noqa: E402
 
 
 class RecoveryWindow(Gtk.ApplicationWindow):
@@ -52,7 +53,14 @@ class RecoveryWindow(Gtk.ApplicationWindow):
 
         body = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         body.set_vexpand(True)
-        root.append(body)
+
+        # Float transient toasts over the page area, bottom-centre.
+        overlay = Gtk.Overlay()
+        overlay.set_vexpand(True)
+        overlay.set_child(body)
+        self.toast = Toast()
+        overlay.add_overlay(self.toast)
+        root.append(overlay)
 
         self.stack = Gtk.Stack()
         self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT)
@@ -72,6 +80,10 @@ class RecoveryWindow(Gtk.ApplicationWindow):
         self.stack.add_titled(RestorePage(), "restore", "Restore")
         self.stack.add_titled(USBPage(), "usb", "USB Writer")
         self.stack.add_titled(AboutPage(), "about", "About")
+
+    def show_toast(self, message: str, kind: str = "info"):
+        """Reveal a transient notification; reached from pages via widgets.notify."""
+        self.toast.show(message, kind)
 
 
 class RecoveryApp(Gtk.Application):

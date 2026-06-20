@@ -4,6 +4,16 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] — 2026-06-20
+
+### Added
+- **In-app toast notifications.** When a Backup, Restore, or USB write/format
+  job finishes, a transient message slides up at the bottom of the window —
+  green on success, red on failure — and auto-dismisses after a few seconds.
+  This mirrors the Arch Linux Tweak Tool's in-app notification, built from
+  plain GTK (no libadwaita) so it behaves identically on the GTK 4 versions
+  shipped by Arch, Debian, and Fedora.
+
 ## [0.2.0] — 2026-06-17
 
 ### Added

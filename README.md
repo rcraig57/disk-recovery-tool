@@ -31,8 +31,9 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
 - **Optional bootloader re-registration** (Limine / GRUB / systemd-boot) for
   restoring onto a different machine; same-machine restores boot via the existing
   EFI fallback with no extra step.
-- **GTK4 GUI** with a live progress bar (parsed from partclone) and a full log,
-  plus a CLI for scripting and rescue environments.
+- **GTK4 GUI** with a live progress bar (parsed from partclone), a full log, and
+  transient toast notifications on job completion, plus a CLI for scripting and
+  rescue environments.
 - **USB Writer** — write an installer/live **ISO** to a USB stick with `dd`
   (`oflag=sync`) and a live progress bar, or **format** a stick as FAT32, exFAT,
   NTFS, or ext4. Lists removable devices only by default and names the exact
