@@ -54,8 +54,8 @@ flatpak_list="$(mktemp)"
 trap 'rm -f "$native_list" "$foreign_list" "$flatpak_list"' EXIT
 : > "$foreign_list"; : > "$flatpak_list"
 
-# Records, for the manifest header, HOW the native list was derived. Only the
-# apt branch sets it (its derivation is non-obvious); empty = omit the header.
+# Records, for the manifest header, HOW the native list was derived. The apt and
+# dnf branches set it (their derivation is non-obvious); empty = omit the header.
 EXPORT_METHOD=""
 
 case "$MGR" in
@@ -94,15 +94,62 @@ case "$MGR" in
     ;;
   dnf)
     # "user-installed" = installed on purpose, not pulled in as a dependency.
-    # dnf4 understands repoquery --userinstalled; dnf5 (Fedora 41+) keeps the
-    # 'history userinstalled' form, so fall back to it.
+    #
+    # Caveat (the dnf twin of the apt one above): Fedora's installer — anaconda
+    # on Workstation, kiwi on the KDE/Spin images — marks the ENTIRE base system
+    # as user-installed in the rpmdb. So `dnf repoquery --userinstalled` returns
+    # the whole OS (400+ packages on a KDE spin), not just your additions.
+    #
+    # dnf keeps every transaction in its history, and the original install is the
+    # earliest one: a single build/install date, which on multi-step spin images
+    # is a short contiguous run of transactions sharing that date. We treat that
+    # earliest-dated block as the installer baseline and subtract the packages it
+    # installed, leaving only what you added on later days.
+    #
+    # Trade-off: software installed on the SAME day as the OS lands in the
+    # baseline block and is not recorded. If the history is unreadable we fall
+    # back to the raw user-installed set (over-reports, but never silently wrong).
+    #
+    # dnf4 understands repoquery --userinstalled; dnf5 (Fedora 41+) still does,
+    # with 'dnf history userinstalled' as a fallback.
+    userinstalled="$(mktemp)"
     if dnf repoquery --userinstalled --qf '%{name}\n' >/dev/null 2>&1; then
       dnf repoquery --userinstalled --qf '%{name}\n' 2>/dev/null \
-        | awk 'NF{print $1}' | sort -u > "$native_list"
+        | awk 'NF{print $1}' | sort -u > "$userinstalled"
     else
       dnf history userinstalled 2>/dev/null \
-        | awk 'NF{print $1}' | sort -u > "$native_list"
+        | awk 'NF{print $1}' | sort -u > "$userinstalled"
     fi
+
+    # NB: one "Begin time" line per transaction, so no early `exit` in awk — an
+    # early exit would SIGPIPE dnf and, under `set -o pipefail`, abort the script.
+    earliest="$(dnf history info 1 2>/dev/null | awk '/^Begin time/{print $4}')"
+    base_set="$(mktemp)"
+    if [ -n "$earliest" ]; then
+      # Walk transactions from the first, collecting the packages each installed,
+      # until the date changes — that contiguous earliest-dated run is the
+      # install. History lists each package as name-EPOCH:version-release.arch, so
+      # strip from the first "-<digits>:" (the epoch) to recover the bare name.
+      id=1
+      while :; do
+        info="$(dnf history info "$id" 2>/dev/null)" || break
+        [ -n "$info" ] || break
+        d="$(printf '%s\n' "$info" | awk '/^Begin time/{print $4}')"
+        [ "$d" = "$earliest" ] || break
+        printf '%s\n' "$info" \
+          | awk '/^[[:space:]]+Install /{n=$2; sub(/-[0-9]+:.*/, "", n); print n}'
+        id=$((id + 1))
+      done | sort -u > "$base_set"
+    fi
+
+    if [ -s "$base_set" ]; then
+      comm -23 "$userinstalled" "$base_set" > "$native_list"
+      EXPORT_METHOD="dnf --userinstalled minus install-date baseline ($earliest, $(wc -l < "$base_set" | tr -d ' ') pkgs)"
+    else
+      cp "$userinstalled" "$native_list"
+      EXPORT_METHOD="dnf --userinstalled (no install-history baseline found)"
+    fi
+    rm -f "$userinstalled" "$base_set"
     ;;
 esac
 

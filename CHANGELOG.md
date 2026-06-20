@@ -4,6 +4,22 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] — 2026-06-20
+
+### Fixed
+- **Packages export on Fedora now records only what you actually added.** This is
+  the dnf twin of the 0.4.1 apt fix. Fedora's installer — anaconda on Workstation,
+  kiwi on the KDE/Spin images — marks the *entire* base system as user-installed in
+  the rpmdb, so `dnf repoquery --userinstalled` was returning the whole OS (~400
+  packages on a KDE spin, almost all of it base system). The dnf path now reads
+  `dnf history`, treats the earliest-dated run of transactions (the build/install)
+  as the installer baseline, and subtracts the packages it installed — leaving just
+  what you added on later days (e.g. 401 → 18 on a Fedora 44 KDE install). When the
+  install history can't be read it falls back to the raw user-installed set. The
+  manifest's `# method:` line now records which dnf path produced the list.
+  *Trade-off:* software installed on the **same day** as the OS lands in the
+  baseline block and is not recorded. pacman and apt exports are unchanged.
+
 ## [0.4.1] — 2026-06-20
 
 ### Fixed
