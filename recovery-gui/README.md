@@ -1,7 +1,9 @@
 # Disk Recovery Tool (GUI)
 
 A GTK4 front end for the whole-disk **backup** and **restore** scripts in
-`../part_clone/`, plus a **USB Writer** (write an ISO to a USB device, or format
+`../part_clone/`, plus **Rescue** (ddrescue salvage of a failing disk),
+**Verify** (re-check a backup's checksums), a SMART health pre-flight in the
+disk pickers, and a **USB Writer** (write an ISO to a USB device, or format
 one). Look and feel modelled on Erik Dubois' Arch Linux Tweak Tool. The GUI is a
 thin wrapper: every operation runs the same audited shell scripts you can run
 from a terminal, so the CLI and GUI never drift.
@@ -24,15 +26,17 @@ actual backup/restore operations will fail without root.
 ```
 recovery-tool                 launcher (pkexec, Wayland/X11)
 src/
-  recovery_tool.py            main: window, sidebar, stack, CSS
+  recovery_tool.py            main: window, sidebar, stack, CSS, toast overlay
   backup_page.py              Backup page
+  rescue_page.py              Rescue page (ddrescue failing-disk salvage)
   restore_page.py             Restore page (ERASE-guarded)
+  verify_page.py              Verify page (re-check backup checksums)
   usb_page.py                 USB Writer page (write ISO / format, confirm dialog)
   about_page.py               About / Help
   jobview.py                  progress bar + collapsible log, owns the runner
-  runner.py                   subprocess + partclone progress parser
-  disks.py                    lsblk disk enumeration
-  widgets.py                  disk picker, path chooser, titles
+  runner.py                   subprocess + progress parser (partclone/ddrescue)
+  disks.py                    lsblk disk enumeration + SMART health (smartctl)
+  widgets.py                  disk picker, path chooser, titles, toast notifications
   config.py                   app constants + backend-script discovery
   style.css                   ATT-style theme
 data/
@@ -47,9 +51,11 @@ a prompt:
 
 - **Backup:** `partclone-backup.sh --yes [--force] SRC DEST` (with `ZSTD_LEVEL`
   in the environment).
+- **Rescue:** `ddrescue-rescue.sh --yes [--force] [--retries N] SRC DEST_DIR`.
 - **Restore:** `partclone-restore.sh --erase --no-reboot (--grow|--no-grow)
   (--bootloader|--no-bootloader) BACKUP_DIR TARGET` (with `BOOTLOADER_DRYRUN=1`
   when the dry-run box is ticked).
+- **Verify:** `verify-backup.sh [--deep] BACKUP_DIR`.
 - **USB write:** `usb-write.sh --yes IMAGE DEVICE`.
 - **USB format:** `usb-format.sh --yes --fs FSTYPE [--label L] [--owner UID:GID]
   DEVICE`.
