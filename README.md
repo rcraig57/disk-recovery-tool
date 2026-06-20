@@ -48,6 +48,8 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
 
 ![Disk Recovery Tool — Rescue page](images/rescue.png)
 
+![Disk Recovery Tool — Verify page](images/verify.png)
+
 ![Disk Recovery Tool — USB Writer page](images/usb-writer.png)
 
 ## Repository layout
