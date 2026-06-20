@@ -73,6 +73,7 @@ package() {
   # --- backend scripts (authoritative backup/restore + USB writer logic) ---
   install -dm755 "$share/scripts"
   install -m755 part_clone/partclone-backup.sh part_clone/partclone-restore.sh \
+    part_clone/verify-backup.sh \
     part_clone/usb-write.sh part_clone/usb-format.sh "$share/scripts/"
   # optional self-test / diagnostic helpers (ignore if absent)
   install -m755 part_clone/test-grow-loopback.sh part_clone/test-bootloader-detect.sh \

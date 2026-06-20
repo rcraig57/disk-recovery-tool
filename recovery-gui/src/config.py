@@ -53,6 +53,11 @@ def restore_script() -> Path:
     return backend_dir() / "partclone-restore.sh"
 
 
+def verify_script() -> Path:
+    """Verify backend: re-check a backup folder's checksums (Verify page)."""
+    return backend_dir() / "verify-backup.sh"
+
+
 def write_script() -> Path:
     """USB Writer backend: dd an image onto a whole device (USB Writer page)."""
     return backend_dir() / "usb-write.sh"

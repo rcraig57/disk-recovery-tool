@@ -4,6 +4,16 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — Unreleased
+
+### Added
+- **Verify page.** Re-check a stored backup folder without restoring it: every
+  compressed partition image is re-hashed and compared with the SHA-256 recorded
+  at backup time, so bit-rot or a truncated copy is caught before you rely on the
+  set. Strictly read-only. An optional **Deep check** also runs `zstd -t` to
+  confirm each image decompresses cleanly. Backend: `part_clone/verify-backup.sh`
+  (`verify-backup.sh [--deep] BACKUP_DIR`), scriptable for cron archive checks.
+
 ## [0.2.1] — 2026-06-20
 
 ### Added

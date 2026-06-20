@@ -20,6 +20,7 @@ from about_page import AboutPage  # noqa: E402
 from backup_page import BackupPage  # noqa: E402
 from restore_page import RestorePage  # noqa: E402
 from usb_page import USBPage  # noqa: E402
+from verify_page import VerifyPage  # noqa: E402
 from widgets import Toast  # noqa: E402
 
 
@@ -78,6 +79,7 @@ class RecoveryWindow(Gtk.ApplicationWindow):
 
         self.stack.add_titled(BackupPage(), "backup", "Backup")
         self.stack.add_titled(RestorePage(), "restore", "Restore")
+        self.stack.add_titled(VerifyPage(), "verify", "Verify")
         self.stack.add_titled(USBPage(), "usb", "USB Writer")
         self.stack.add_titled(AboutPage(), "about", "About")
 

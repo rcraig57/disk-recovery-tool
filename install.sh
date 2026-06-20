@@ -100,6 +100,7 @@ install -Dm644 "$SRC/recovery-gui/data/$ICON_REL" "$SHARE/data/$ICON_REL"
 
 install -dm755 "$SHARE/scripts"
 install -m755  "$SRC/part_clone/partclone-backup.sh" "$SRC/part_clone/partclone-restore.sh" \
+  "$SRC/part_clone/verify-backup.sh" \
   "$SRC/part_clone/usb-write.sh" "$SRC/part_clone/usb-format.sh" "$SHARE/scripts/"
 # Optional self-test helpers (ignore if absent).
 install -m755  "$SRC"/part_clone/test-grow-loopback.sh "$SRC"/part_clone/test-bootloader-detect.sh \

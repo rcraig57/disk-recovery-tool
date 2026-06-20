@@ -26,6 +26,8 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
 - **Complete, bit-exact backups** — all btrfs subvolumes and snapshots included.
 - **zstd compression** with a selectable level.
 - **SHA-256 verification** of every image, checked before any restore writes.
+- **Verify a stored backup** at any time, without restoring — re-hashes every
+  image against its recorded checksum (optional deep `zstd -t` decompress test).
 - **Restore to a same or larger disk**, optionally growing the last partition to
   fill the extra space.
 - **Optional bootloader re-registration** (Limine / GRUB / systemd-boot) for
