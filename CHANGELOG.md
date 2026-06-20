@@ -4,6 +4,20 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-06-20
+
+### Fixed
+- **Packages export on Debian/Ubuntu/Mint now records only what you actually
+  added.** On Debian proper, `apt-mark showmanual` is a tidy "what the user chose"
+  set, but the Ubuntu/Mint installer seeds the *entire* base system as manually
+  installed — so the export was listing ~2000 packages, almost all of them base OS.
+  The apt path now subtracts the installer's own baseline snapshot
+  (`/var/log/installer/initial-status.gz`) from `apt-mark showmanual`, leaving just
+  the packages installed *after* the initial install. When that snapshot is absent
+  (pure Debian, or a re-imaged system) it falls back to plain `apt-mark showmanual`
+  exactly as before. The manifest header now carries a `# method:` line recording
+  which path produced the list. pacman and dnf exports are unchanged.
+
 ## [0.4.0] — 2026-06-20
 
 ### Added

@@ -10,7 +10,7 @@ from pathlib import Path
 
 APP_ID = "io.github.rcraig57.DiskRecoveryTool"
 APP_NAME = "Disk Recovery Tool"
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.4.1"
 ICON_NAME = "io.github.rcraig57.DiskRecoveryTool"
 
 _HERE = Path(__file__).resolve().parent  # .../recovery-gui/src

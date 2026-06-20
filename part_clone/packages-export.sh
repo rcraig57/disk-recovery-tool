@@ -54,6 +54,10 @@ flatpak_list="$(mktemp)"
 trap 'rm -f "$native_list" "$foreign_list" "$flatpak_list"' EXIT
 : > "$foreign_list"; : > "$flatpak_list"
 
+# Records, for the manifest header, HOW the native list was derived. Only the
+# apt branch sets it (its derivation is non-obvious); empty = omit the header.
+EXPORT_METHOD=""
+
 case "$MGR" in
   pacman)
     # -Qq quiet, -e explicitly installed (you asked for it, not a dependency),
@@ -63,7 +67,30 @@ case "$MGR" in
     ;;
   apt)
     # Packages marked "manual" are the ones a user chose; the rest are deps.
-    apt-mark showmanual | sort -u > "$native_list"
+    #
+    # Caveat: on Debian proper the installer marks only a handful of packages
+    # "manual", so `apt-mark showmanual` is a clean "what the user chose" set.
+    # But Ubuntu/Mint installers seed the ENTIRE base system as manually
+    # installed, so there showmanual returns ~2000 packages — the whole OS, not
+    # just your additions. When the installer's baseline snapshot exists, subtract
+    # it so we record only packages added AFTER the initial install; otherwise
+    # fall back to plain showmanual (correct on Debian / re-imaged systems).
+    baseline="/var/log/installer/initial-status.gz"
+    if [ -r "$baseline" ]; then
+      base_set="$(mktemp)"
+      # The snapshot is a dpkg status file: pair each 'Package:' with its
+      # 'Status:' and keep only those that were actually installed at base time.
+      gzip -dc "$baseline" 2>/dev/null | awk '
+        /^Package:/ { pkg = $2 }
+        /^Status:/  { if ($0 ~ /installed/) print pkg }
+      ' | sort -u > "$base_set"
+      comm -23 <(apt-mark showmanual | sort -u) "$base_set" > "$native_list"
+      rm -f "$base_set"
+      EXPORT_METHOD="apt-mark showmanual minus installer baseline ($baseline)"
+    else
+      apt-mark showmanual | sort -u > "$native_list"
+      EXPORT_METHOD="apt-mark showmanual (no installer baseline found)"
+    fi
     ;;
   dnf)
     # "user-installed" = installed on purpose, not pulled in as a dependency.
@@ -99,6 +126,7 @@ MANIFEST="$OUT_DIR/drt-packages-$MGR-$(uname -n)-$(date +%Y%m%d-%H%M%S).list"
   echo "# created: $(date -Iseconds)"
   echo "# host: $(uname -n)"
   echo "# native_count: $native_count"
+  if [ -n "$EXPORT_METHOD" ]; then echo "# method: $EXPORT_METHOD"; fi
   echo "#"
   echo "# Lines below that do NOT start with '#' are reinstalled on Import."
   echo "# '#aur:' and '#flatpak:' lines are recorded for reference only and are"
