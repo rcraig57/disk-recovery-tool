@@ -4,9 +4,17 @@ All notable changes to **Disk Recovery Tool** are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
-## [0.3.0] — Unreleased
+## [0.3.0] — 2026-06-20
 
 ### Added
+- **Rescue page (failing-disk salvage).** When partclone can't read a dying
+  drive, **GNU ddrescue** images it block-by-block, tolerating read errors and
+  keeping a mapfile so the rescue is resumable and retries only the bad areas.
+  Produces a raw (sparse), full-disk image + mapfile + self-describing metadata;
+  reads the source only, refuses a destination on the source disk, and reports
+  unrecovered areas at the end. Backend: `part_clone/ddrescue-rescue.sh`. Adds a
+  `ddrescue` dependency (**`gddrescue`** on Debian/Ubuntu). New sidebar order:
+  Backup · Rescue · Restore · Verify · USB Writer · About.
 - **SMART health pre-flight.** Disk pickers now show a SMART health badge
   (`⚠`/`✗`) next to any drive that reports aging or failure, read with
   `smartctl`. Backing up a failing **source** raises a non-blocking advisory

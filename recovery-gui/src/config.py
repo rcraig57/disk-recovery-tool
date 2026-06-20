@@ -10,7 +10,7 @@ from pathlib import Path
 
 APP_ID = "io.github.rcraig57.DiskRecoveryTool"
 APP_NAME = "Disk Recovery Tool"
-APP_VERSION = "0.2.1"
+APP_VERSION = "0.3.0"
 ICON_NAME = "io.github.rcraig57.DiskRecoveryTool"
 
 _HERE = Path(__file__).resolve().parent  # .../recovery-gui/src
@@ -51,6 +51,11 @@ def backup_script() -> Path:
 
 def restore_script() -> Path:
     return backend_dir() / "partclone-restore.sh"
+
+
+def rescue_script() -> Path:
+    """Rescue backend: ddrescue a failing disk to an image + mapfile (Rescue page)."""
+    return backend_dir() / "ddrescue-rescue.sh"
 
 
 def verify_script() -> Path:

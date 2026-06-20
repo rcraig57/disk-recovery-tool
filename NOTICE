@@ -36,5 +36,10 @@ smartmontools — https://www.smartmontools.org  (GPL-2.0-or-later)
     disk's health. This project calls it as an external program; it does not
     include or modify smartmontools' source.
 
+GNU ddrescue — https://www.gnu.org/software/ddrescue/  (GPL-2.0-or-later)
+    The Rescue page's failing-disk salvage engine; this project invokes
+    `ddrescue` and `ddrescuelog` as external programs and does not include or
+    modify their source. (Packaged as `gddrescue` on Debian/Ubuntu.)
+
 GTK 4 / PyGObject
     The graphical toolkit and Python bindings.

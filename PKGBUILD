@@ -17,7 +17,7 @@ _repo="https://github.com/rcraig57/disk-recovery-tool.git"
 
 _pkgname=disk-recovery-tool
 pkgname=disk-recovery-tool-git
-pkgver=0.2.1
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="GTK4 whole-disk backup/restore + USB ISO-writer and formatter (partclone + zstd), styled like Arch Linux Tweak Tool"
 arch=('x86_64')
@@ -39,6 +39,7 @@ depends=(
   'ntfs-3g'         # mkfs.ntfs — NTFS (USB format)
   'coreutils'       # dd, stdbuf (USB write progress streaming)
   'smartmontools'   # smartctl — SMART health pre-flight in the disk pickers
+  'ddrescue'        # GNU ddrescue + ddrescuelog — failing-disk Rescue mode
   'polkit'          # pkexec
 )
 optdepends=(
@@ -74,7 +75,7 @@ package() {
   # --- backend scripts (authoritative backup/restore + USB writer logic) ---
   install -dm755 "$share/scripts"
   install -m755 part_clone/partclone-backup.sh part_clone/partclone-restore.sh \
-    part_clone/verify-backup.sh \
+    part_clone/verify-backup.sh part_clone/ddrescue-rescue.sh \
     part_clone/usb-write.sh part_clone/usb-format.sh "$share/scripts/"
   # optional self-test / diagnostic helpers (ignore if absent)
   install -m755 part_clone/test-grow-loopback.sh part_clone/test-bootloader-detect.sh \

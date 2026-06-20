@@ -30,6 +30,9 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
   image against its recorded checksum (optional deep `zstd -t` decompress test).
 - **SMART health pre-flight** — disk pickers flag a failing or aging drive
   (`smartctl`), warning you before you image off, or restore onto, bad media.
+- **Rescue mode for failing disks** — when partclone can't read a dying drive,
+  **ddrescue** salvages it to a raw image plus a mapfile, tolerating read errors
+  and resumable to retry only the bad areas.
 - **Restore to a same or larger disk**, optionally growing the last partition to
   fill the extra space.
 - **Optional bootloader re-registration** (Limine / GRUB / systemd-boot) for
@@ -50,6 +53,7 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
 ```
 recovery-gui/        GTK4 application (launcher, src/, data/)
 part_clone/          backend: partclone-backup.sh, partclone-restore.sh,
+                     verify-backup.sh, ddrescue-rescue.sh,
                      usb-write.sh, usb-format.sh, self-tests
 images/              screenshots used in the docs
 install.sh           universal installer (Arch / Debian / Fedora)
@@ -109,6 +113,20 @@ Both are interactive by default and accept flags for unattended use
 `--no-reboot`). The source disk for a backup must be unmounted — image a disk you
 did **not** boot from (e.g. from a live USB, or a second drive).
 
+Verify a stored backup without restoring it (re-hashes every image; `--deep`
+adds a `zstd -t` decompress test):
+
+```
+./part_clone/verify-backup.sh --deep /mnt/storage/HOST-img-YYYYMMDD-HHMMSS
+```
+
+Rescue a failing disk to an image + mapfile with ddrescue (save it to a
+**different**, healthy disk):
+
+```
+sudo ./part_clone/ddrescue-rescue.sh --yes /dev/sdX /mnt/storage
+```
+
 The USB Writer scripts are standalone too. Write an ISO to a USB device:
 
 ```
@@ -138,9 +156,11 @@ command line already match.
 
 `python` `python-gobject` `gtk4` `partclone` `zstd` `util-linux` `gptfdisk`
 `parted` `btrfs-progs` `e2fsprogs` `dosfstools` `exfatprogs` `ntfs-3g`
-`coreutils` `polkit`. The last four serve the USB Writer: `dosfstools`
-(`mkfs.fat`/FAT32), `exfatprogs` (`mkfs.exfat`), `ntfs-3g` (`mkfs.ntfs`), and
-`coreutils` (`dd`, `stdbuf`); `e2fsprogs` covers `mkfs.ext4`. Optional:
+`coreutils` `smartmontools` `ddrescue` `polkit`. Four serve the USB Writer:
+`dosfstools` (`mkfs.fat`/FAT32), `exfatprogs` (`mkfs.exfat`), `ntfs-3g`
+(`mkfs.ntfs`), and `coreutils` (`dd`, `stdbuf`); `e2fsprogs` covers `mkfs.ext4`.
+`smartmontools` (`smartctl`) powers the SMART pre-flight and `ddrescue` powers
+Rescue mode (on Debian/Ubuntu that package is **`gddrescue`**). Optional:
 `xorg-xhost` (to run the GUI as root under X11/XWayland), `limine`/`grub`
 (bootloader re-registration). The PKGBUILD declares all of these.
 
