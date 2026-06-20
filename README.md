@@ -46,6 +46,8 @@ scripts you can run from a terminal, so the GUI and CLI never drift apart.
   NTFS, or ext4. Lists removable devices only by default and names the exact
   device in a confirmation dialog before it writes or formats.
 
+![Disk Recovery Tool — Rescue page](images/rescue.png)
+
 ![Disk Recovery Tool — USB Writer page](images/usb-writer.png)
 
 ## Repository layout
