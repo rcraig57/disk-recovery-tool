@@ -31,5 +31,10 @@ mintstick by Clement Lefebvre / Linux Mint — https://github.com/linuxmint/mint
 zstd — https://github.com/facebook/zstd
     Compression of the partition images.
 
+smartmontools — https://www.smartmontools.org  (GPL-2.0-or-later)
+    The SMART health pre-flight invokes `smartctl` (JSON output) to read each
+    disk's health. This project calls it as an external program; it does not
+    include or modify smartmontools' source.
+
 GTK 4 / PyGObject
     The graphical toolkit and Python bindings.

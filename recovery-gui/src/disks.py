@@ -36,6 +36,81 @@ def disk_has_mount(name: str) -> bool:
     return any(line.strip() for line in out.splitlines())
 
 
+# -- SMART health ---------------------------------------------------------- #
+# smartctl needs root; the GUI runs elevated (pkexec), so this works in-app and
+# degrades to "unknown" in an unprivileged UI preview. JSON output (-j) is in
+# smartmontools >= 7.0, which Arch, Debian and Fedora all ship. Results are
+# cached for the process lifetime (SMART changes slowly, and the three disk
+# pickers would otherwise each re-probe every disk).
+_SMART_CACHE: dict = {}
+
+# ATA attributes whose non-zero raw value means the drive is degrading.
+_ATA_WARN_ATTRS = {
+    "Reallocated_Sector_Ct": "reallocated sectors",
+    "Current_Pending_Sector": "pending sectors",
+    "Reported_Uncorrect": "uncorrectable errors",
+    "Offline_Uncorrectable": "offline-uncorrectable",
+}
+
+
+def _smartctl_json(name: str):
+    """Return parsed smartctl JSON for /dev/<name>, or None. Tries a plain query
+    first, then '-d sat' for USB SATA bridges."""
+    for extra in ([], ["-d", "sat"]):
+        out = _run(["smartctl", "-j", "-H", "-A", *extra, f"/dev/{name}"])
+        if not out:
+            continue
+        try:
+            data = json.loads(out)
+        except json.JSONDecodeError:
+            continue
+        # Only trust a reply that actually carries an overall SMART verdict;
+        # many USB enclosures answer without one.
+        if isinstance(data, dict) and "smart_status" in data:
+            return data
+    return None
+
+
+def _smart_warnings(data: dict) -> list:
+    """Collect human-readable degradation signs from a passing-but-aging drive."""
+    warns = []
+    for attr in data.get("ata_smart_attributes", {}).get("table", []):
+        label = _ATA_WARN_ATTRS.get(attr.get("name", ""))
+        if label and int(attr.get("raw", {}).get("value", 0) or 0) > 0:
+            warns.append(f"{attr['raw']['value']} {label}")
+    nvme = data.get("nvme_smart_health_information_log", {})
+    if int(nvme.get("media_errors", 0) or 0) > 0:
+        warns.append(f"{nvme['media_errors']} media errors")
+    if int(nvme.get("critical_warning", 0) or 0) > 0:
+        warns.append("NVMe critical warning")
+    return warns
+
+
+def smart_health(name: str) -> dict:
+    """Best-effort SMART health for /dev/<name>.
+
+    Returns {"status": "ok"|"warn"|"fail"|"unknown", "summary": str}.
+    """
+    if name in _SMART_CACHE:
+        return _SMART_CACHE[name]
+
+    data = _smartctl_json(name)
+    if data is None:
+        result = {"status": "unknown", "summary": ""}
+    else:
+        passed = data.get("smart_status", {}).get("passed")
+        if passed is False:
+            result = {"status": "fail", "summary": "SMART: FAILING"}
+        elif passed is None:
+            result = {"status": "unknown", "summary": ""}
+        else:
+            warns = _smart_warnings(data)
+            result = ({"status": "warn", "summary": "SMART: " + ", ".join(warns)}
+                      if warns else {"status": "ok", "summary": "SMART: OK"})
+    _SMART_CACHE[name] = result
+    return result
+
+
 def list_disks(include_mounted: bool = False) -> list:
     """Return whole disks as dicts: name, path, size (bytes), model, mounted.
 
@@ -64,6 +139,7 @@ def list_disks(include_mounted: bool = False) -> list:
                 "model": (dev.get("model") or "").strip() or "unknown",
                 "mounted": mounted,
                 "removable": bool(dev.get("rm")),
+                "health": smart_health(name),
             }
         )
     return disks
@@ -77,4 +153,11 @@ def describe(disk: dict) -> str:
     # mounted disks, so this marker never shows there.
     if disk.get("mounted"):
         label += "  [mounted]"
+    # Surface only SMART problems (failing/aging); a clean or unknown drive adds
+    # no badge, keeping the row uncluttered and the signal high.
+    health = disk.get("health", {})
+    if health.get("status") == "fail":
+        label += "  ✗ SMART: FAILING"
+    elif health.get("status") == "warn":
+        label += f"  ⚠ {health.get('summary', 'SMART warning')}"
     return label

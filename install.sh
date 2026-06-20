@@ -63,7 +63,7 @@ case "$FAMILY" in
   arch)
     PM_INSTALL=(pacman -S --needed --noconfirm)
     PKGS=(partclone zstd gptfdisk parted btrfs-progs e2fsprogs util-linux
-          dosfstools exfatprogs ntfs-3g coreutils
+          dosfstools exfatprogs ntfs-3g coreutils smartmontools
           polkit python python-gobject gtk4)
     ;;
   debian)
@@ -71,13 +71,13 @@ case "$FAMILY" in
     PM_INSTALL=(apt-get install -y)
     apt-get update -qq || true
     PKGS=(partclone zstd gdisk parted btrfs-progs e2fsprogs util-linux
-          dosfstools exfatprogs ntfs-3g coreutils
+          dosfstools exfatprogs ntfs-3g coreutils smartmontools
           policykit-1 python3 python3-gi gir1.2-gtk-4.0 libgtk-4-1)
     ;;
   fedora)
     PM_INSTALL=(dnf install -y)
     PKGS=(partclone zstd gdisk parted btrfs-progs e2fsprogs util-linux
-          dosfstools exfatprogs ntfs-3g coreutils
+          dosfstools exfatprogs ntfs-3g coreutils smartmontools
           polkit python3 python3-gobject gtk4)
     ;;
 esac

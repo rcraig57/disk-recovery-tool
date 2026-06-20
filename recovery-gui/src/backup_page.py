@@ -9,7 +9,7 @@ import os  # noqa: E402
 import config  # noqa: E402
 from gi.repository import Gtk  # noqa: E402
 from jobview import JobView  # noqa: E402
-from widgets import DiskPicker, PathChooser, make_intro, make_title  # noqa: E402
+from widgets import DiskPicker, PathChooser, make_intro, make_title, notify  # noqa: E402
 
 INTRO = (
     "Create a complete, used-blocks-only image of a whole disk. Each filesystem "
@@ -96,6 +96,13 @@ class BackupPage(Gtk.Box):
         if not os.path.isdir(dest):
             self._error(f"Destination folder does not exist: {dest}")
             return
+
+        # SMART advisory (non-blocking): imaging a failing disk is exactly when
+        # an error-tolerant rescue copy is the better tool, but the user may
+        # still want this image — so warn and proceed.
+        if disk.get("health", {}).get("status") == "fail":
+            notify(self, "Source reports SMART FAILING — image may be slow or "
+                         "incomplete; the Rescue page is more error-tolerant.", "error")
 
         level = int(self.zstd.get_value())
         argv = ["env", f"ZSTD_LEVEL={level}", str(config.backup_script()), "--yes"]

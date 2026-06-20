@@ -38,6 +38,7 @@ depends=(
   'exfatprogs'      # mkfs.exfat — exFAT (USB format)
   'ntfs-3g'         # mkfs.ntfs — NTFS (USB format)
   'coreutils'       # dd, stdbuf (USB write progress streaming)
+  'smartmontools'   # smartctl — SMART health pre-flight in the disk pickers
   'polkit'          # pkexec
 )
 optdepends=(

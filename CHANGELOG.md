@@ -7,6 +7,12 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 ## [0.3.0] — Unreleased
 
 ### Added
+- **SMART health pre-flight.** Disk pickers now show a SMART health badge
+  (`⚠`/`✗`) next to any drive that reports aging or failure, read with
+  `smartctl`. Backing up a failing **source** raises a non-blocking advisory
+  pointing at the Rescue page; restoring onto a failing **target** adds a
+  prominent warning to the erase-confirmation dialog. Clean and unknown drives
+  add no badge. Adds a `smartmontools` dependency.
 - **Verify page.** Re-check a stored backup folder without restoring it: every
   compressed partition image is re-hashed and compared with the SHA-256 recorded
   at backup time, so bit-rot or a truncated copy is caught before you rely on the

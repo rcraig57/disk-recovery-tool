@@ -142,12 +142,17 @@ class RestorePage(Gtk.Box):
         # Final confirm dialog naming the exact disk.
         dialog = Gtk.AlertDialog()
         dialog.set_modal(True)
-        dialog.set_message(f"Erase {disk['path']} and restore?")
-        dialog.set_detail(
+        detail = (
             f"{disk['path']} — {disk['model']}\n\n"
             "Everything on this disk will be destroyed and replaced from the "
             "backup. This cannot be undone."
         )
+        if disk.get("health", {}).get("status") == "fail":
+            detail += ("\n\n⚠ This target reports SMART FAILING. Restoring a system "
+                       "onto a dying disk is strongly discouraged — replace the "
+                       "drive first.")
+        dialog.set_message(f"Erase {disk['path']} and restore?")
+        dialog.set_detail(detail)
         dialog.set_buttons(["Cancel", "Erase and restore"])
         dialog.set_default_button(0)
         dialog.set_cancel_button(0)
